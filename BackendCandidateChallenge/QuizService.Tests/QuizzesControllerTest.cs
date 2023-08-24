@@ -3,7 +3,6 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
-using Microsoft.Data.Sqlite;
 using Newtonsoft.Json;
 using QuizService.Model;
 using Xunit;
@@ -61,7 +60,6 @@ public class QuizzesControllerTest : IClassFixture<QuizAppFactory>
         const string QuizApiEndPoint = "/api/quizzes/999/questions";
 
         var client = _factory.CreateClient();
-        const long quizId = 999;
         var question = new QuestionCreateModel("The answer to everything is what?");
         var content = new StringContent(JsonConvert.SerializeObject(question));
         content.Headers.ContentType = new MediaTypeHeaderValue("application/json");

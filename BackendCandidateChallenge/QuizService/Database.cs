@@ -1,4 +1,5 @@
 using System.Data;
+using System.Data.Common;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -8,14 +9,14 @@ namespace QuizService;
 
 internal static class Database
 {
-    public static IDbConnection GetConnection()
+    public static DbConnection GetConnection()
     {
         var connection = new SqliteConnection("Data Source=:memory:");
         connection.Open();
         return connection;
     }
 
-    public static void RunMigration(IDbConnection connection)
+    public static void RunMigration(DbConnection connection)
     {
         var assembly = typeof(IAssemblyMarker).GetTypeInfo().Assembly;
         var migrationResourceNames = assembly
