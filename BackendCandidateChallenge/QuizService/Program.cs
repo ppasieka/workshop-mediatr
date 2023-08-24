@@ -1,17 +1,31 @@
-﻿using Microsoft.AspNetCore;
+﻿using System.Data;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace QuizService;
 
-public class Program
+public static class Program
 {
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
-        BuildWebHost(args).Run();
+        IDbConnection connection = Database.GetConnection();
+        Database.RunMigration(connection);
+        IHost host = BuildWebHost(args, connection);
+
+        await host.RunAsync();
     }
 
-    public static IWebHost BuildWebHost(string[] args) =>
-        WebHost.CreateDefaultBuilder(args)
-            .UseStartup<Startup>()
+    private static IHost BuildWebHost(string[] args, IDbConnection connection) =>
+        Host.CreateDefaultBuilder(args)
+            .ConfigureWebHostDefaults(builder =>
+            {
+                builder.UseStartup<Startup>();
+                builder.ConfigureServices(services =>
+                {
+                    services.AddSingleton(connection);
+                });
+            })
             .Build();
 }
