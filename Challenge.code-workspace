@@ -2,7 +2,7 @@
   "folders": [
     {
       "name": "Challenge",
-      "path": "BackendCandidateChallenge"
+      "path": "QuizShop"
     },
     {
       "name": "Assets",
@@ -19,10 +19,10 @@
       "**/.DS_Store": true,
       "**/Thumbs.db": true,
       "**/*.crswap": true,
-      "BackendCandidateChallenge": true,
+      "QuizShop": true,
       "**/obj": true,
       "**/bin": true
     },
-    "dotnet.defaultSolution": "Challenge/BackendCandidateChallenge.sln"
+    "dotnet.defaultSolution": "Challenge/QuizShop.sln"
   }
 }

@@ -2,7 +2,6 @@
 .vscode
 **/*[Oo]bj/
 **/*[Bb]in/
-BackendCandidateChallenge/QuizClient.Tests/logs/
 *.user
 
 *.idea
