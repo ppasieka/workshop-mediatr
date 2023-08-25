@@ -12,6 +12,7 @@ public static class Program
     public static async Task Main(string[] args)
     {
         DbConnection connection = Database.GetConnection();
+        Database.RegisterCustomTypeHandlers();
         Database.RunMigration(connection);
         IHost host = BuildWebHost(args, connection);
 

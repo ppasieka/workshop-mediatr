@@ -20,6 +20,14 @@ public class QuizzesControllerTest : IClassFixture<QuizAppFactory>
     }
 
     [Fact]
+    public async Task Get_all_quizzes()
+    {
+        var client = _factory.CreateClient();
+        var response = await client.GetAsync(new Uri($"{QuizApiEndPoint}"));
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
     public async Task PostNewQuizAddsQuiz()
     {
         var quiz = new QuizCreateModel("Test title");

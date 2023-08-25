@@ -18,13 +18,11 @@ internal class GetQuizzesQuery
         await using var transaction = await _connection.BeginTransactionAsync(cancellationToken);
 
         await foreach (var quiz in _connection.EnumerateAsync<Quiz>(
-                           "SELECT * FROM Quizzes",
+                           "SELECT * FROM Quiz",
                            transaction: transaction,
                            cancellationToken: cancellationToken
                        )
         )
-        {
             yield return quiz;
-        }
     }
 }

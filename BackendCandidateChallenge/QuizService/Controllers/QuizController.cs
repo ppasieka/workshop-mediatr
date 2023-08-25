@@ -1,29 +1,33 @@
 ﻿using System.Collections.Generic;
-using System.Data;
+using System.Data.Common;
 using Dapper;
 using Microsoft.AspNetCore.Mvc;
 using QuizService.Model;
 using QuizService.Model.Domain;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using QuizService.Application;
+using Quiz = QuizService.Model.Domain.Quiz;
 
 namespace QuizService.Controllers;
 
 [Route("api/quizzes")]
 public class QuizController : Controller
 {
-    private readonly IDbConnection _connection;
+    private readonly DbConnection _connection;
 
-    public QuizController(IDbConnection connection)
+    public QuizController(DbConnection connection)
     {
         _connection = connection;
     }
 
     // GET api/quizzes
     [HttpGet]
-    public IEnumerable<QuizResponseModel> Get()
+    public async Task<IEnumerable<QuizResponseModel>> Get()
     {
-        const string sql = "SELECT * FROM Quiz;";
-        var quizzes = _connection.Query<Quiz>(sql);
+        var query = new GetQuizzesQuery(_connection);
+        var quizzes = await query.Execute(CancellationToken.None).ToListAsync();
         return quizzes.Select(quiz =>
             new QuizResponseModel
             {

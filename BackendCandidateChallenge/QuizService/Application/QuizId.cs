@@ -1,25 +1,22 @@
-
 using System;
+using Dapper;
 
 namespace QuizService.Application;
 
 internal class QuizId : IEquatable<QuizId>
 {
-    public int Value { get; }
+    public long Value { get; }
     
-    private QuizId(int value)
-    {
-        Value = value;
-    }
+    private QuizId(long value) => Value = value;
 
-    public static QuizId? TryCreate(int value)
+    public static QuizId? TryCreate(long value)
     {
         if (value < 1)
             return null;
         return new QuizId(value);
     }
     
-    public static QuizId Create(int value)
+    public static QuizId Create(long value)
     {
         var quizId = TryCreate(value);
         if (quizId is null)
@@ -42,8 +39,19 @@ internal class QuizId : IEquatable<QuizId>
         return Equals((QuizId)obj);
     }
 
-    public override int GetHashCode()
+    public override int GetHashCode() => Value.GetHashCode();
+    public static implicit operator long(QuizId quizId) => quizId.Value;
+}
+
+internal class QuizIdTypeHandler : SqlMapper.TypeHandler<QuizId>
+{
+    public override QuizId Parse(object value)
     {
-        return Value;
+        return QuizId.Create((long)value);
+    }
+
+    public override void SetValue(System.Data.IDbDataParameter parameter, QuizId value)
+    {
+        parameter.Value = value.Value;
     }
 }

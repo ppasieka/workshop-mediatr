@@ -1,9 +1,10 @@
-using System.Data;
 using System.Data.Common;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Dapper;
 using Microsoft.Data.Sqlite;
+using QuizService.Application;
 
 namespace QuizService;
 
@@ -36,6 +37,11 @@ internal static class Database
             command.CommandText = sql;
             command.ExecuteNonQuery();
         }
+    }
+    
+    public static void RegisterCustomTypeHandlers()
+    {
+        SqlMapper.AddTypeHandler(new QuizIdTypeHandler());
     }
 
     private static string GetResourceText(Assembly assembly, string resourceName)
