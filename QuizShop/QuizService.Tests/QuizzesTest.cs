@@ -9,12 +9,12 @@ using Xunit;
 
 namespace QuizService.Tests;
 
-public class QuizzesControllerTest : IClassFixture<QuizAppFactory>
+public class QuizzesTest : IClassFixture<QuizAppFactory>
 {
     const string QuizApiEndPoint = "/api/quizzes/";
 
     private readonly QuizAppFactory _factory;
-    public QuizzesControllerTest(QuizAppFactory factory)
+    public QuizzesTest(QuizAppFactory factory)
     {
         _factory = factory;
     }
@@ -28,7 +28,7 @@ public class QuizzesControllerTest : IClassFixture<QuizAppFactory>
     }
 
     [Fact]
-    public async Task PostNewQuizAddsQuiz()
+    public async Task Add_a_new_quiz_response_with_created_201_status()
     {
         var quiz = new QuizCreateModel("Test title");
         var client = _factory.CreateClient();
@@ -39,9 +39,21 @@ public class QuizzesControllerTest : IClassFixture<QuizAppFactory>
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         Assert.NotNull(response.Headers.Location);
     }
+    
+    [Fact]
+    public async Task Add_a_new_quiz_response_have_a_location_header()
+    {
+        var quiz = new QuizCreateModel("Test title");
+        var client = _factory.CreateClient();
+        var content = new StringContent(JsonConvert.SerializeObject(quiz));
+        content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+        var response = await client.PostAsync(new Uri($"{QuizApiEndPoint}"),
+            content);
+        Assert.NotNull(response.Headers.Location);
+    }
 
     [Fact]
-    public async Task AQuizExistGetReturnsQuiz()
+    public async Task Get_an_existing_quiz_responds_with_ok_200_status()
     {
         var client = _factory.CreateClient();
         const long quizId = 1;
@@ -52,9 +64,21 @@ public class QuizzesControllerTest : IClassFixture<QuizAppFactory>
         Assert.Equal(quizId, quiz.Id);
         Assert.Equal("My first quiz", quiz.Title);
     }
+    
+    [Fact]
+    public async Task Get_an_existing_quiz_response_contains_quiz_model()
+    {
+        var client = _factory.CreateClient();
+        const long quizId = 1;
+        var response = await client.GetAsync(new Uri($"{QuizApiEndPoint}{quizId}"));
+        Assert.NotNull(response.Content);
+        var quiz = JsonConvert.DeserializeObject<QuizResponseModel>(await response.Content.ReadAsStringAsync());
+        Assert.Equal(quizId, quiz.Id);
+        Assert.Equal("My first quiz", quiz.Title);
+    }
 
     [Fact]
-    public async Task AQuizDoesNotExistGetFails()
+    public async Task Request_for_non_existing_quiz_response_with_not_found_404_status()
     {
         var client = _factory.CreateClient();
         const long quizId = 999;
@@ -63,7 +87,7 @@ public class QuizzesControllerTest : IClassFixture<QuizAppFactory>
     }
 
     [Fact]
-    public async Task AQuizDoesNotExists_WhenPostingAQuestion_ReturnsNotFound()
+    public async Task Add_a_question_to_non_existing_quiz_response_with_not_found_404_status()
     {
         const string QuizApiEndPoint = "/api/quizzes/999/questions";
 

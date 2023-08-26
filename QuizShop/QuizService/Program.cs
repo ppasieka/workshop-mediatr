@@ -11,9 +11,9 @@ public static class Program
 {
     public static async Task Main(string[] args)
     {
-        DbConnection connection = Database.GetConnection();
+        DbConnection connection = Database.GetConnection(useInMemory: false);
         Database.RegisterCustomTypeHandlers();
-        Database.RunMigration(connection);
+        await Database.RunMigration(connection);
         IHost host = BuildWebHost(args, connection);
 
         await host.RunAsync();

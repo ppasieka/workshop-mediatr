@@ -13,7 +13,7 @@ public static class DapperExtensions
     /// Asynchronously enumerates the results of a query.
     /// </summary>
     /// <typeparam name="T">The type of result to return.</typeparam>
-    /// <param name="cnn">The connection to query on.</param>
+    /// <param name="connection">The connection to query on.</param>
     /// <param name="sql">The SQL to execute for the query.</param>
     /// <param name="param">The parameters to pass, if any.</param>
     /// <param name="transaction">The transaction to use, if any.</param>
@@ -22,14 +22,14 @@ public static class DapperExtensions
     /// <remarks>See <see href="https://stackoverflow.com/a/66723553/1178314"/> and
     /// <see href="https://github.com/DapperLib/Dapper/issues/1239#issuecomment-1035507322"/>.</remarks>
     public static async IAsyncEnumerable<T> EnumerateAsync<T>(
-        this DbConnection cnn,
+        this DbConnection connection,
         string sql,
         object? param = null,
         IDbTransaction? transaction = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default
     )
     {
-        await using var reader = await cnn.ExecuteReaderAsync(sql, param, transaction);
+        await using var reader = await connection.ExecuteReaderAsync(sql, param, transaction);
         var rowParser = reader.GetRowParser<T>();
         while (await reader.ReadAsync(cancellationToken))
         {

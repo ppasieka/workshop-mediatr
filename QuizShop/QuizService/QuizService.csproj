@@ -16,4 +16,8 @@
     <EmbeddedResource Include="Migrations\*.sql" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Remove="quiz.db" />
+  </ItemGroup>
+
 </Project>

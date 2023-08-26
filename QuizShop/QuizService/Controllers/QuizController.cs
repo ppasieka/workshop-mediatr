@@ -5,35 +5,19 @@ using Microsoft.AspNetCore.Mvc;
 using QuizService.Model;
 using QuizService.Model.Domain;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using QuizService.Application;
 using Quiz = QuizService.Model.Domain.Quiz;
 
 namespace QuizService.Controllers;
 
+[ApiController]
 [Route("api/quizzes")]
-public class QuizController : Controller
+public class QuizController : ControllerBase
 {
     private readonly DbConnection _connection;
 
     public QuizController(DbConnection connection)
     {
         _connection = connection;
-    }
-
-    // GET api/quizzes
-    [HttpGet]
-    public async Task<IEnumerable<QuizResponseModel>> Get()
-    {
-        var query = new GetQuizzesQuery(_connection);
-        var quizzes = await query.Execute(CancellationToken.None).ToListAsync();
-        return quizzes.Select(quiz =>
-            new QuizResponseModel
-            {
-                Id = quiz.Id,
-                Title = quiz.Title
-            });
     }
 
     // GET api/quizzes/5
@@ -79,14 +63,6 @@ public class QuizController : Controller
         };
     }
 
-    // POST api/quizzes
-    [HttpPost]
-    public IActionResult Post([FromBody]QuizCreateModel value)
-    {
-        var sql = $"INSERT INTO Quiz (Title) VALUES('{value.Title}'); SELECT LAST_INSERT_ROWID();";
-        var id = _connection.ExecuteScalar(sql);
-        return Created($"/api/quizzes/{id}", null);
-    }
 
     // PUT api/quizzes/5
     [HttpPut("{id}")]
