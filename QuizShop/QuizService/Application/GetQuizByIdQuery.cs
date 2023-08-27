@@ -20,13 +20,27 @@ internal class GetQuizByIdQuery
         const string sql = "SELECT * FROM Quiz WHERE Id = @Id";
         // using dapper query for a quiz with questions and answers
         await using var transaction = await _connection.BeginTransactionAsync(cancellationToken);
-        var result = await _connection.QuerySingleAsync<QuizWithQuestions>(new CommandDefinition(
-                commandText: sql,
-                new { quizId },
-                transaction: transaction,
-                cancellationToken: cancellationToken
-            )
-        );
-        return new QuizWithQuestions();
+        var quizQuery = "SELECT * FROM Quiz WHERE Id = @QuizId";
+        quiz = db.QueryFirstOrDefault<Quiz>(quizQuery, new { QuizId = quizId });
+
+        if (quiz == null)
+            return null;
+
+        quiz.Questions = new List<Question>();
+
+        // Query 2: Fetch questions for the quiz
+        var questionQuery = "SELECT * FROM Question WHERE QuizId = @QuizId";
+        var questions = db.Query<Question>(questionQuery, new { QuizId = quizId }).ToList();
+
+        // Query 3: Fetch answers for the questions
+        var answerQuery = "SELECT * FROM Answer WHERE QuestionId IN @QuestionIds";
+        var answers = db.Query<Answer>(answerQuery, new { QuestionIds = questions.Select(q => q.Id) }).ToList();
+
+        // Build the result
+        foreach (var question in questions)
+        {
+            question.Answers = answers.Where(a => a.QuestionId == question.Id).ToList();
+            quiz.Questions.Add(question);
+        }        return new QuizWithQuestions();
     }
 }

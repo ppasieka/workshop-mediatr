@@ -3,7 +3,6 @@ using System.Data.Common;
 using Dapper;
 using Microsoft.AspNetCore.Mvc;
 using QuizService.Model;
-using QuizService.Model.Domain;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,7 +10,6 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using FluentValidation.Results;
 using QuizService.Application;
-using Quiz = QuizService.Model.Domain.Quiz;
 
 namespace QuizService.Controllers;
 
