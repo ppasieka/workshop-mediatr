@@ -41,5 +41,4 @@ public class QuizzesController : ControllerBase
         var id = _connection.ExecuteScalar(sql);
         return Created($"/api/quizzes/{id}", null);
     }
-
 }

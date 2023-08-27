@@ -9,8 +9,10 @@ using Xunit;
 
 namespace QuizService.Tests;
 
+// ReSharper disable once ClassNeverInstantiated.Global
 public class QuizAppFactory : WebApplicationFactory<Startup>, IAsyncLifetime
 {
+    public const string QuizApiEndPoint = "/api/quizzes/";
     private readonly DbConnection _connection = Database.GetConnection(useInMemory: true);
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
