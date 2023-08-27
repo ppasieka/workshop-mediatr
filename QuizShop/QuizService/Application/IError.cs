@@ -18,3 +18,14 @@ internal class QuizNotFound : IError
     public string Code { get; }
 }
 
+internal class QuizAlreadyExists : IError
+{
+    public QuizAlreadyExists(QuizTitle quizTitle)
+    {
+        Message = $"Quiz with title {quizTitle.Value} already exists";
+        Code = "quiz_already_exists";
+    }
+
+    public string Message { get; }
+    public string Code { get; }
+}

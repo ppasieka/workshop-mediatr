@@ -37,7 +37,7 @@ internal class QuizTitle : IEquatable<QuizTitle>
             return null;
         if (!Regex.IsMatch(value, @"^[a-zA-Z0-9 ]+$"))
             return null;
-        return new QuizTitle(value);
+        return new QuizTitle(value.Trim());
     }
     
     public static QuizTitle Create(string? value)

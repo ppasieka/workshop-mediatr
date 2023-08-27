@@ -1,4 +1,3 @@
-using System;
 using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,7 +15,7 @@ internal class UpdateQuizTitleCommandHandler
         _connection = connection;
     }
 
-    public async Task<VoidResult> Execute(UpdateQuizTitleCommand command, CancellationToken cancellationToken)
+    public async Task<UnitResult> Execute(UpdateQuizTitleCommand command, CancellationToken cancellationToken)
     {
         if (!await SqlQuizExists.Execute(command.QuizId, _connection, cancellationToken: cancellationToken))
             return new QuizNotFound(command.QuizId);
@@ -30,6 +29,6 @@ internal class UpdateQuizTitleCommandHandler
                 cancellationToken: cancellationToken)
             );
         await transaction.CommitAsync(cancellationToken);
-        return default(ValueTuple);
+        return Unit.Instance;
     }
 }

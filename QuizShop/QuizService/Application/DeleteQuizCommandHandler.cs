@@ -15,7 +15,7 @@ internal class DeleteQuizCommandHandler
         _connection = connection;
     }
 
-    public async Task<VoidResult> Execute(QuizId quizId, CancellationToken cancellationToken)
+    public async Task<UnitResult> Execute(QuizId quizId, CancellationToken cancellationToken)
     {
         if (!await SqlQuizExists.Execute(quizId, _connection, cancellationToken: cancellationToken))
             return new QuizNotFound(quizId: quizId);
@@ -28,6 +28,6 @@ internal class DeleteQuizCommandHandler
             )
         );
         await transaction.CommitAsync(cancellationToken: cancellationToken);
-        return default(ValueTuple);
+        return Unit.Instance;
     }
 }

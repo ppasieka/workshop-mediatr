@@ -29,7 +29,7 @@ public class QuizzesTest : IClassFixture<QuizAppFactory>
     [Fact]
     public async Task Add_a_new_quiz_response_with_created_201_status()
     {
-        var quiz = new QuizCreateModel("Test title");
+        var quiz = new { Title = $"Test title {Guid.NewGuid():N}" };
         var client = _factory.CreateClient();
         var content = new StringContent(JsonConvert.SerializeObject(quiz));
         content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
@@ -42,7 +42,7 @@ public class QuizzesTest : IClassFixture<QuizAppFactory>
     [Fact]
     public async Task Add_a_new_quiz_response_have_a_location_header()
     {
-        var quiz = new QuizCreateModel("Test title");
+        var quiz = new { Title = $"Test title {Guid.NewGuid():N}" };
         var client = _factory.CreateClient();
         var content = new StringContent(JsonConvert.SerializeObject(quiz));
         content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
@@ -66,7 +66,7 @@ public class QuizzesTest : IClassFixture<QuizAppFactory>
         var client = _factory.CreateClient();
         const long quizId = 1;
         var response = await client.GetAsync(new Uri($"{QuizAppFactory.QuizApiEndPoint}{quizId}"));
-        var quiz = JsonConvert.DeserializeObject<QuizResponseModel>(await response.Content.ReadAsStringAsync());
+        var quiz = JsonConvert.DeserializeObject<QuizItemResponse>(await response.Content.ReadAsStringAsync());
         Assert.Equal(quizId, quiz.Id);
         Assert.Equal("My first quiz", quiz.Title);
     }
@@ -83,13 +83,13 @@ public class QuizzesTest : IClassFixture<QuizAppFactory>
     [Fact]
     public async Task Add_a_question_to_non_existing_quiz_response_with_not_found_404_status()
     {
-        const string QuizApiEndPoint = "/api/quizzes/999/questions";
+        const string quizApiEndPoint = "/api/quizzes/999/questions";
 
         var client = _factory.CreateClient();
         var question = new QuestionCreateModel("The answer to everything is what?");
         var content = new StringContent(JsonConvert.SerializeObject(question));
         content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-        var response = await client.PostAsync(new Uri($"{QuizApiEndPoint}"),content);
+        var response = await client.PostAsync(new Uri($"{quizApiEndPoint}"),content);
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 }

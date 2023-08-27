@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace QuizService.Model;
 
-public class QuizResponseModel
+public class QuizItemResponse
 {
     public class AnswerItem
     {

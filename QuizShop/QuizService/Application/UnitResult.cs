@@ -1,0 +1,1 @@
+global using UnitResult = QuizService.Application.Result<QuizService.Application.IError, System.ValueTuple>;

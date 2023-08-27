@@ -44,21 +44,21 @@ public class QuizController : ControllerBase
                 dict[answer.QuestionId].Add(answer);
                 return dict;
             });
-        return new QuizResponseModel
+        return new QuizItemResponse
         {
             Id = quiz.Id,
             Title = quiz.Title,
-            Questions = questions.Select(question => new QuizResponseModel.QuestionItem
+            Questions = questions.Select(question => new QuizItemResponse.QuestionItem
             {
                 Id = question.Id,
                 Text = question.Text,
                 Answers = answers.ContainsKey(question.Id)
-                    ? answers[question.Id].Select(answer => new QuizResponseModel.AnswerItem
+                    ? answers[question.Id].Select(answer => new QuizItemResponse.AnswerItem
                     {
                         Id = answer.Id,
                         Text = answer.Text
                     })
-                    : new QuizResponseModel.AnswerItem[0],
+                    : new QuizItemResponse.AnswerItem[0],
                 CorrectAnswerId = question.CorrectAnswerId
             }),
             Links = new Dictionary<string, string>
@@ -70,7 +70,7 @@ public class QuizController : ControllerBase
     }
     
     // PUT api/quizzes/5
-    [HttpPut("{id}")]
+    [HttpPut("{id:}")]
     public async Task<IActionResult> Put(
         [FromRoute] int id,
         [FromBody] UpdateQuizRequest value,

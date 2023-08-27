@@ -2,7 +2,9 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
 using System.Threading;
-using Dapper;
+using System.Threading.Tasks;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Mvc;
 using QuizService.Application;
 using QuizService.Model;
@@ -22,11 +24,11 @@ public class QuizzesController : ControllerBase
     
     // GET api/quizzes
     [HttpGet]
-    public IAsyncEnumerable<QuizResponseModel> Get(CancellationToken cancellationToken)
+    public IAsyncEnumerable<QuizItemResponse> Get(CancellationToken cancellationToken)
     {
         var query = new GetQuizzesQuery(_connection);
         return query.Execute(cancellationToken).Select(quiz =>
-            new QuizResponseModel
+            new QuizItemResponse
             {
                 Id = quiz.Id,
                 Title = quiz.Title
@@ -35,10 +37,28 @@ public class QuizzesController : ControllerBase
     
     // POST api/quizzes
     [HttpPost]
-    public IActionResult Post([FromBody]QuizCreateModel value)
+    public async Task<IActionResult> Post(
+        [FromBody] AddQuizRequest value,
+        [FromServices] IValidator<AddQuizRequest> validator,
+        CancellationToken cancellationToken
+    )
     {
-        var sql = $"INSERT INTO Quiz (Title) VALUES('{value.Title}'); SELECT LAST_INSERT_ROWID();";
-        var id = _connection.ExecuteScalar(sql);
-        return Created($"/api/quizzes/{id}", null);
+        var result = validator.Validate(value);
+        if (!result.IsValid)
+        {
+            result.AddToModelState(ModelState);
+            return BadRequest(ModelState);
+        }
+
+        var (isSuccess, failure, quizId) = await new AddQuizCommandHandler(_connection).Execute(
+                new AddQuizCommand(QuizTitle.Create(value.Title)),
+                cancellationToken
+            );
+        if (!isSuccess)
+        {
+            ModelState.AddModelError("error", failure.Message);
+            return BadRequest(ModelState);
+        }
+        return Created($"/api/quizzes/{quizId.Value}", null);
     }
 }
