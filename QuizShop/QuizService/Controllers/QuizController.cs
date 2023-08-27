@@ -7,6 +7,9 @@ using QuizService.Model.Domain;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using FluentValidation;
+using FluentValidation.AspNetCore;
+using FluentValidation.Results;
 using QuizService.Application;
 using Quiz = QuizService.Model.Domain.Quiz;
 
@@ -68,20 +71,38 @@ public class QuizController : ControllerBase
     
     // PUT api/quizzes/5
     [HttpPut("{id}")]
-    public IActionResult Put(int id, [FromBody]QuizUpdateModel value)
+    public async Task<IActionResult> Put(
+        [FromRoute] int id,
+        [FromBody] UpdateQuizRequest value,
+        [FromServices] IValidator<UpdateQuizRequest> validator,
+        CancellationToken cancellationToken
+    )
     {
-        const string sql = "UPDATE Quiz SET Title = @Title WHERE Id = @Id";
-        int rowsUpdated = _connection.Execute(sql, new {Id = id, Title = value.Title});
-        if (rowsUpdated == 0)
+        ValidationResult result = validator.Validate(value);
+        if (!result.IsValid)
+        {
+            result.AddToModelState(ModelState);
+            return BadRequest(ModelState);
+        }
+        var (isSuccess, failure, _) = await new UpdateQuizTitleCommandHandler(_connection).Execute(
+            new UpdateQuizTitleCommand(
+                QuizId.Create(id),
+                QuizTitle.Create(value.Title)
+            ),
+            cancellationToken);
+        if (isSuccess)
+            return NoContent();
+        if (failure is QuizNotFound)
             return NotFound();
-        return NoContent();
+        ModelState.AddModelError("error", failure.Message);
+        return BadRequest();
     }
 
     // DELETE api/quizzes/5
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
     {
-        var result = await new DeleteQuizCommand(_connection).Execute(QuizId.Create(id), cancellationToken);
+        var result = await new DeleteQuizCommandHandler(_connection).Execute(QuizId.Create(id), cancellationToken);
         if (result.IsSuccess)
             return NoContent();
         return NotFound();

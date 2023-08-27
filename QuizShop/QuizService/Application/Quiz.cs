@@ -4,15 +4,13 @@ namespace QuizService.Application;
 internal class Quiz
 {
     public QuizId Id { get; }
-    public string Title { get; }
-    public string Description { get; }
+    public QuizTitle Title { get; }
 
     private Quiz() {}
     
-    public Quiz(QuizId id, string title, string description) : this()
+    public Quiz(QuizId id, QuizTitle title) : this()
     {
         Id = id;
         Title = title;
-        Description = description;
     }
 }

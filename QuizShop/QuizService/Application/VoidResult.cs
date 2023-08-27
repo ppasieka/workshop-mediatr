@@ -1,0 +1,1 @@
+global using VoidResult = QuizService.Application.Result<QuizService.Application.IError, System.ValueTuple>;

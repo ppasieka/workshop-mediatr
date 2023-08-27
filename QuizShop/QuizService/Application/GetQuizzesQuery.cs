@@ -24,5 +24,6 @@ internal class GetQuizzesQuery
                        )
         )
             yield return quiz;
+        await transaction.CommitAsync(cancellationToken);
     }
 }

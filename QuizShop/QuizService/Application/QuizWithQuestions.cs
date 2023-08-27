@@ -1,6 +1,6 @@
 namespace QuizService.Application;
 
-public class QuizWithQuestions
+internal class QuizWithQuestions
 {
     
 }

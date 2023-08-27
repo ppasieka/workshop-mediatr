@@ -1,10 +1,11 @@
+using System;
 using System.Data;
 using System.Data.Common;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using Xunit;
 
 namespace QuizService.Tests;
@@ -14,20 +15,28 @@ public class QuizAppFactory : WebApplicationFactory<Startup>, IAsyncLifetime
 {
     public const string QuizApiEndPoint = "/api/quizzes/";
     private readonly DbConnection _connection = Database.GetConnection(useInMemory: true);
-    protected override void ConfigureWebHost(IWebHostBuilder builder)
+
+    protected override IHostBuilder? CreateHostBuilder()
     {
-        builder.ConfigureServices(services =>
-        {
-            services.RemoveAll(typeof(IDbConnection));
-            services.RemoveAll(typeof(DbConnection));
-            services.AddSingleton<IDbConnection>(_connection);
-            services.AddSingleton(_connection);
-        });
+        var builder = Host.CreateDefaultBuilder()
+            .ConfigureWebHostDefaults(webBuilder =>
+            {
+                webBuilder.UseStartup<Startup>();
+                webBuilder.ConfigureServices(services =>
+                {
+                    services.AddSingleton<IDbConnection>(_connection);
+                    services.AddSingleton(_connection);
+                });
+            });
+        
+        return builder;
     }
 
     public async Task InitializeAsync()
     {
+        Database.RegisterCustomTypeHandlers();
         await Database.RunMigration(_connection);
+        await Database.SeedDatabase(_connection);
     }
 
     public new Task DisposeAsync()

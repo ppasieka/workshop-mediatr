@@ -36,26 +36,43 @@ internal static class Database
         await CreateMigrationTable(connection);
         foreach (var resourceName in GetMigrationsFromResources())
         {
-            await ApplyDatabaseMigrations(connection, resourceName, typeof(IAssemblyMarker).GetTypeInfo().Assembly);
+            await ApplyScript(connection, resourceName, typeof(IAssemblyMarker).GetTypeInfo().Assembly);
+        }
+    }
+
+    public static async Task SeedDatabase(DbConnection connection)
+    {
+        foreach (var resourceName in GetSeedsFromResources())
+        {
+            await ApplyScript(connection, resourceName, typeof(IAssemblyMarker).GetTypeInfo().Assembly);
         }
     }
 
     private static string[] GetMigrationsFromResources()
     {
-        var migrationResourceNames = typeof(IAssemblyMarker).GetTypeInfo().Assembly
+        var resources = typeof(IAssemblyMarker).GetTypeInfo().Assembly
             .GetManifestResourceNames()
-            .Where(x => x.EndsWith(".sql"))
+            .Where(x => x.EndsWith(".migration.sql"))
             .OrderBy(x => x)
             .ToArray();
-        if (migrationResourceNames.Length == 0)
+        if (resources.Length == 0)
         {
-            throw new Exception("No migration files found!");
+            throw new InvalidOperationException("No migration files found!");
         }
 
-        return migrationResourceNames;
+        return resources;
     }
 
-    private static async Task ApplyDatabaseMigrations(DbConnection connection, string resourceName, Assembly assembly)
+    private static string[] GetSeedsFromResources()
+    {
+        return typeof(IAssemblyMarker).GetTypeInfo().Assembly
+            .GetManifestResourceNames()
+            .Where(x => x.EndsWith(".seed.sql"))
+            .OrderBy(x => x)
+            .ToArray();
+    }
+
+    private static async Task ApplyScript(DbConnection connection, string resourceName, Assembly assembly)
     {
         // Check if migration is applied
         var checkCmd = connection.CreateCommand();
@@ -96,6 +113,7 @@ internal static class Database
     public static void RegisterCustomTypeHandlers()
     {
         SqlMapper.AddTypeHandler(new QuizIdTypeHandler());
+        SqlMapper.AddTypeHandler(new QuizTitleTypeHandler());
     }
 
     private static async Task<string> GetResourceText(Assembly assembly, string resourceName)

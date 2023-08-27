@@ -14,6 +14,7 @@ public static class Program
         DbConnection connection = Database.GetConnection(useInMemory: false);
         Database.RegisterCustomTypeHandlers();
         await Database.RunMigration(connection);
+        await Database.SeedDatabase(connection);
         IHost host = BuildWebHost(args, connection);
 
         await host.RunAsync();
