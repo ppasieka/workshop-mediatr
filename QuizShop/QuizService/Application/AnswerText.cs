@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using Dapper;
 
 namespace QuizService.Application;
@@ -30,20 +31,20 @@ internal class AnswerText : IEquatable<AnswerText>
     public static bool operator !=(AnswerText? left, AnswerText? right) => !Equals(left, right);
 
     public static implicit operator string(AnswerText answerText) => answerText.Value;
-    public static AnswerText? TryCreate(string? value)
+    public static bool TryCreate(string? value, [NotNullWhen(true)] out AnswerText? answerText)
     {
-        if (string.IsNullOrWhiteSpace(value))
-            return null;
-        if (value.Length > 255)
-            return null;
-        
-        return new AnswerText(value.Trim());
+        if (string.IsNullOrWhiteSpace(value) || value.Length > 255)
+        {
+            answerText = null;
+            return false;
+        }
+        answerText = new AnswerText(value.Trim());
+        return true;
     }
     
     public static AnswerText Create(string? value)
     {
-        var answerText = TryCreate(value);
-        if (answerText is null)
+        if (!TryCreate(value, out var answerText))
             throw new ArgumentException($"Invalid answer text: {value}", nameof(value));
         return answerText;
     }

@@ -34,6 +34,7 @@ internal class AddQuestionCommandHandler
                 cancellationToken: cancellationToken
             )
         );
+        await transaction.CommitAsync(cancellationToken);
 
         return QuestionId.Create(questionId);
     }

@@ -85,28 +85,74 @@ public class QuizQuestionsController : ControllerBase
 
     // DELETE api/quizzes/5/questions/6
     [HttpDelete]
-    [Route("{id}/questions/{qid}")]
-    public IActionResult DeleteQuestion(int id, int qid)
+    [Route("{id:long}/questions/{qid:long}")]
+    public async Task<IActionResult> DeleteQuestion(
+        [FromRoute] long id,
+        [FromRoute] long qid
+    )
     {
-        const string sql = "DELETE FROM Question WHERE Id = @QuestionId";
-        _connection.ExecuteScalar(sql, new {QuestionId = qid});
+        var command = new DeleteQuestionCommand(QuizId.Create(id), QuestionId.Create(qid));
+        var (isSuccess, _, _) = await new DeleteQuestionCommandHandler(_connection).Execute(command, CancellationToken.None);
+        if (!isSuccess)
+            return NotFound();
         return NoContent();
     }
 
     // POST api/quizzes/5/questions/6/answers
     [HttpPost]
-    [Route("{id}/questions/{qid}/answers")]
-    public IActionResult PostAnswer(int id, int qid, [FromBody]AnswerCreateModel value)
+    [Route("{id:long}/questions/{qid:long}/answers")]
+    public async Task<IActionResult> PostAnswer(
+        [FromRoute] long id,
+        [FromRoute] long qid,
+        [FromBody] AnswerCreateRequest value,
+        [FromServices] IValidator<AnswerCreateRequest> validator,
+        CancellationToken cancellationToken
+        )
     {
-        const string sql = "INSERT INTO Answer (Text, QuestionId) VALUES(@Text, @QuestionId); SELECT LAST_INSERT_ROWID();";
-        var answerId = _connection.ExecuteScalar(sql, new {Text = value.Text, QuestionId = qid});
+        var validationResult = validator.Validate(value);
+        if (!validationResult.IsValid)
+        {
+            validationResult.AddToModelState(ModelState);
+            return BadRequest(ModelState);
+        }
+        var command = new AddAnswerCommand(
+            QuizId.Create(id),
+            QuestionId.Create(qid),
+            AnswerText.Create(value.Text)
+        );
+        var (isSuccess, failure, answerId) = await new AddAnswerCommandHandler(_connection).Execute(command, cancellationToken);
+        if (!isSuccess)
+        {
+            switch (failure)
+            {
+                case QuizNotFound:
+                case QuestionNotFound:
+                    return NotFound();
+                default:
+                    ModelState.AddModelError("error", failure.Message);
+                    return BadRequest(ModelState);
+            }
+        }
         return Created($"/api/quizzes/{id}/questions/{qid}/answers/{answerId}", null);
     }
 
     // PUT api/quizzes/5/questions/6/answers/7
-    [HttpPut("{id}/questions/{qid}/answers/{aid}")]
-    public IActionResult PutAnswer(int id, int qid, int aid, [FromBody]AnswerUpdateModel value)
+    [HttpPut("{id:long}/questions/{qid:long}/answers/{aid:long}")]
+    public IActionResult PutAnswer(
+        [FromRoute] long id,
+        [FromRoute] long qid,
+        [FromRoute] long aid,
+        [FromBody] AnswerUpdateRequest value,
+        [FromServices] IValidator<AnswerUpdateRequest> validator
+    )
     {
+        var validationResult = validator.Validate(value);
+        if (!validationResult.IsValid)
+        {
+            validationResult.AddToModelState(ModelState);
+            return BadRequest(ModelState);
+        }
+        
         const string sql = "UPDATE Answer SET Text = @Text WHERE Id = @AnswerId";
         int rowsUpdated = _connection.Execute(sql, new {AnswerId = qid, Text = value.Text});
         if (rowsUpdated == 0)
@@ -116,8 +162,12 @@ public class QuizQuestionsController : ControllerBase
 
     // DELETE api/quizzes/5/questions/6/answers/7
     [HttpDelete]
-    [Route("{id}/questions/{qid}/answers/{aid}")]
-    public IActionResult DeleteAnswer(int id, int qid, int aid)
+    [Route("{id:long}/questions/{qid:long}/answers/{aid:long}")]
+    public IActionResult DeleteAnswer(
+        [FromRoute] long id,
+        [FromRoute] long qid,
+        [FromRoute] long aid
+    )
     {
         const string sql = "DELETE FROM Answer WHERE Id = @AnswerId";
         _connection.ExecuteScalar(sql, new {AnswerId = aid});

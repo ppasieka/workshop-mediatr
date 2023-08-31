@@ -58,6 +58,7 @@ internal class UpdateQuestionCommandHandler
                 transaction: transaction,
                 cancellationToken: cancellationToken)
         );
+        await transaction.CommitAsync(cancellationToken);
         
         return Unit.Instance;
     }
