@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Data.Common;
-using Dapper;
+using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using QuizService.Model;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentValidation;
@@ -25,39 +24,35 @@ public class QuizController : ControllerBase
     }
 
     // GET api/quizzes/5
-    [HttpGet("{id}")]
-    public object Get(int id)
+    [HttpGet("{id:long}")]
+    public async Task<object> Get(long id, CancellationToken cancellationToken)
     {
-        const string quizSql = "SELECT * FROM Quiz WHERE Id = @Id;";
-        var quiz = _connection.QuerySingleOrDefault<Quiz>(quizSql, new {Id = id});
+        if (!QuizId.TryCreate(id, out var quizId))
+        {
+            ModelState.AddModelError("id", "Invalid quiz id");
+            return BadRequest();
+        }
+
+        var quiz = await new GetQuizByIdQuery(_connection).Execute(quizId, cancellationToken);
         if (quiz == null)
             return NotFound();
-        const string questionsSql = "SELECT * FROM Question WHERE QuizId = @QuizId;";
-        var questions = _connection.Query<Question>(questionsSql, new {QuizId = id});
-        const string answersSql = "SELECT a.Id, a.Text, a.QuestionId FROM Answer a INNER JOIN Question q ON a.QuestionId = q.Id WHERE q.QuizId = @QuizId;";
-        var answers = _connection.Query<Answer>(answersSql, new {QuizId = id})
-            .Aggregate(new Dictionary<int, IList<Answer>>(), (dict, answer) => {
-                if (!dict.ContainsKey(answer.QuestionId))
-                    dict.Add(answer.QuestionId, new List<Answer>());
-                dict[answer.QuestionId].Add(answer);
-                return dict;
-            });
-        return new QuizItemResponse
+        
+        return new QuizResponse
         {
             Id = quiz.Id,
             Title = quiz.Title,
-            Questions = questions.Select(question => new QuizItemResponse.QuestionItem
+            Questions = quiz.Questions.Select(question => new QuestionItemResponse
             {
                 Id = question.Id,
                 Text = question.Text,
-                Answers = answers.ContainsKey(question.Id)
-                    ? answers[question.Id].Select(answer => new QuizItemResponse.AnswerItem
+                Answers = question
+                        .Answers
+                        .Select(answer => new AnswerItemResponse
                     {
                         Id = answer.Id,
                         Text = answer.Text
-                    })
-                    : new QuizItemResponse.AnswerItem[0],
-                CorrectAnswerId = question.CorrectAnswerId
+                    }),
+                CorrectAnswerId = question.CorrectAnswerId?.Value
             }),
             Links = new Dictionary<string, string>
             {

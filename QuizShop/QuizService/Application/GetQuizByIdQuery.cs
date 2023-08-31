@@ -13,34 +13,52 @@ internal class GetQuizByIdQuery
     {
         _connection = connection;
     }
-
-
-    public async Task<QuizWithQuestions> GetById(QuizId quizId, CancellationToken cancellationToken)
+    public async Task<QuizWithQuestions?> Execute(QuizId quizId, CancellationToken cancellationToken)
     {
-        const string sql = "SELECT * FROM Quiz WHERE Id = @Id";
-        // using dapper query for a quiz with questions and answers
         await using var transaction = await _connection.BeginTransactionAsync(cancellationToken);
-        var quizQuery = "SELECT * FROM Quiz WHERE Id = @QuizId";
-        quiz = db.QueryFirstOrDefault<Quiz>(quizQuery, new { QuizId = quizId });
-
+        // Query 1: Fetch the quiz
+        var quiz = await _connection.QuerySingleOrDefaultAsync<QuizWithQuestions>(
+            new CommandDefinition(
+                commandText: @"
+SELECT Id, Title FROM Quiz WHERE Id = @QuizId",
+                parameters: new { QuizId = quizId.Value },
+                transaction: transaction,
+                cancellationToken: cancellationToken
+            )
+        );
         if (quiz == null)
             return null;
 
-        quiz.Questions = new List<Question>();
-
         // Query 2: Fetch questions for the quiz
-        var questionQuery = "SELECT * FROM Question WHERE QuizId = @QuizId";
-        var questions = db.Query<Question>(questionQuery, new { QuizId = quizId }).ToList();
-
+        var questions = await _connection.QueryAsync<Question>(
+            new CommandDefinition(
+                commandText: @"
+SELECT Id, Text, CorrectAnswerId FROM Question WHERE QuizId = @QuizId",
+                parameters: new { QuizId = quizId.Value },
+                transaction: transaction,
+                cancellationToken: cancellationToken
+            )
+        );
+        quiz.Questions.Add(questions);
+        
         // Query 3: Fetch answers for the questions
-        var answerQuery = "SELECT * FROM Answer WHERE QuestionId IN @QuestionIds";
-        var answers = db.Query<Answer>(answerQuery, new { QuestionIds = questions.Select(q => q.Id) }).ToList();
-
-        // Build the result
-        foreach (var question in questions)
+        var answers = await _connection.QueryAsync<Answer>(
+            new CommandDefinition(
+                commandText: @"
+SELECT Answer.Id, Answer.QuestionId, Answer.Text 
+FROM Answer 
+JOIN Question ON Answer.QuestionId = Question.Id 
+WHERE Question.QuizId = @QuizId",
+                parameters: new { QuizId = quizId.Value },
+                transaction: transaction,
+                cancellationToken: cancellationToken
+            )
+        );
+        foreach (var answer in answers)
         {
-            question.Answers = answers.Where(a => a.QuestionId == question.Id).ToList();
-            quiz.Questions.Add(question);
-        }        return new QuizWithQuestions();
+            quiz.Questions.TryAddAnswer(answer);
+        }
+
+        return quiz;
     }
 }

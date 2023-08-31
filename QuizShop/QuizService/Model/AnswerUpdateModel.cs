@@ -2,5 +2,5 @@ namespace QuizService.Model;
 
 public class AnswerUpdateModel
 {
-    public string Text { get; set; }
+    public string? Text { get; init; }
 }

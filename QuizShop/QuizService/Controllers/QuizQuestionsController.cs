@@ -1,8 +1,12 @@
 using System.Data.Common;
+using System.Threading;
+using System.Threading.Tasks;
 using Dapper;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Mvc;
+using QuizService.Application;
 using QuizService.Model;
-using QuizService.Model.Domain;
 
 namespace QuizService.Controllers;
 
@@ -19,15 +23,32 @@ public class QuizQuestionsController : ControllerBase
 
     // POST api/quizzes/5/questions
     [HttpPost]
-    [Route("{id}/questions")]
-    public IActionResult PostQuestion(int id, [FromBody]QuestionCreateModel value)
+    [Route("{id:long}/questions")]
+    public async Task<IActionResult> PostQuestion(
+        [FromRoute] long id,
+        [FromBody] AddQuestionRequest value,
+        [FromServices] IValidator<AddQuestionRequest> validator,
+        CancellationToken cancellationToken
+    )
     {
-        const string quizSql = "SELECT * FROM Quiz WHERE Id = @Id;";
-        var quiz = _connection.QuerySingleOrDefault<Quiz>(quizSql, new {Id = id});
-        if (quiz == null)
-            return NotFound();
-        const string sql = "INSERT INTO Question (Text, QuizId) VALUES(@Text, @QuizId); SELECT LAST_INSERT_ROWID();";
-        var questionId = _connection.ExecuteScalar(sql, new {Text = value.Text, QuizId = id});
+        var validationResult = validator.Validate(value);
+        if (!validationResult.IsValid)
+        {
+            validationResult.AddToModelState(ModelState);
+            return BadRequest(ModelState);
+        }
+        var command = new AddQuestionCommand(QuizId.Create(id), QuestionText.Create(value.Text));
+        var (isSuccess, failure, questionId) = await new AddQuestionCommandHandler(_connection).Execute(command, cancellationToken);
+
+        if (!isSuccess)
+        {
+            if (failure is QuizNotFound)
+                return NotFound();
+            
+            ModelState.AddModelError("error", failure.Message);
+            return BadRequest(ModelState);
+        }
+        
         return Created($"/api/quizzes/{id}/questions/{questionId}", null);
     }
 

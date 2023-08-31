@@ -5,7 +5,7 @@ using Dapper;
 
 namespace QuizService.Application;
 
-record UpdateQuizTitleCommand(QuizId QuizId, QuizTitle Title);
+internal record UpdateQuizTitleCommand(QuizId QuizId, QuizTitle Title);
 
 internal class UpdateQuizTitleCommandHandler
 {
@@ -15,7 +15,10 @@ internal class UpdateQuizTitleCommandHandler
         _connection = connection;
     }
 
-    public async Task<UnitResult> Execute(UpdateQuizTitleCommand command, CancellationToken cancellationToken)
+    public async Task<UnitResult> Execute(
+        UpdateQuizTitleCommand command,
+        CancellationToken cancellationToken
+    )
     {
         if (!await SqlQuizExists.Execute(command.QuizId, _connection, cancellationToken: cancellationToken))
             return new QuizNotFound(command.QuizId);

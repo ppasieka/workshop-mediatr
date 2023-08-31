@@ -1,4 +1,3 @@
-using System;
 using System.Data;
 using System.Data.Common;
 using System.Threading.Tasks;
@@ -16,7 +15,7 @@ public class QuizAppFactory : WebApplicationFactory<Startup>, IAsyncLifetime
     public const string QuizApiEndPoint = "/api/quizzes/";
     private readonly DbConnection _connection = Database.GetConnection(useInMemory: true);
 
-    protected override IHostBuilder? CreateHostBuilder()
+    protected override IHostBuilder CreateHostBuilder()
     {
         var builder = Host.CreateDefaultBuilder()
             .ConfigureWebHostDefaults(webBuilder =>
