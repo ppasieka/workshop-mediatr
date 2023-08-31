@@ -3,14 +3,6 @@ namespace QuizService.Application;
 
 internal class Quiz
 {
-    public QuizId Id { get; }
-    public QuizTitle Title { get; }
-
-    private Quiz() {}
-    
-    public Quiz(QuizId id, QuizTitle title) : this()
-    {
-        Id = id;
-        Title = title;
-    }
+    public required QuizId Id { get; init; }
+    public required QuizTitle Title { get; init; }
 }

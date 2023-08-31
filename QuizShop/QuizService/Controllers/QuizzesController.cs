@@ -31,8 +31,13 @@ public class QuizzesController : ControllerBase
             new QuizItemResponse
             {
                 Id = quiz.Id,
-                Title = quiz.Title
-            });
+                Title = quiz.Title,
+                Links = new Dictionary<string, string>()
+                {
+                    ["self"] = $"/api/quizzes/{quiz.Id}"
+                }
+            }
+        );
     }
     
     // POST api/quizzes

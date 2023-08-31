@@ -1,8 +1,12 @@
 using System.Data.Common;
+using System.Threading;
+using System.Threading.Tasks;
 using Dapper;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Mvc;
+using QuizService.Application;
 using QuizService.Model;
-using QuizService.Model.Domain;
 
 namespace QuizService.Controllers;
 
@@ -19,53 +23,136 @@ public class QuizQuestionsController : ControllerBase
 
     // POST api/quizzes/5/questions
     [HttpPost]
-    [Route("{id}/questions")]
-    public IActionResult PostQuestion(int id, [FromBody]QuestionCreateModel value)
+    [Route("{id:long}/questions")]
+    public async Task<IActionResult> PostQuestion(
+        [FromRoute] long id,
+        [FromBody] AddQuestionRequest value,
+        [FromServices] IValidator<AddQuestionRequest> validator,
+        CancellationToken cancellationToken
+    )
     {
-        const string quizSql = "SELECT * FROM Quiz WHERE Id = @Id;";
-        var quiz = _connection.QuerySingleOrDefault<Quiz>(quizSql, new {Id = id});
-        if (quiz == null)
-            return NotFound();
-        const string sql = "INSERT INTO Question (Text, QuizId) VALUES(@Text, @QuizId); SELECT LAST_INSERT_ROWID();";
-        var questionId = _connection.ExecuteScalar(sql, new {Text = value.Text, QuizId = id});
+        var validationResult = validator.Validate(value);
+        if (!validationResult.IsValid)
+        {
+            validationResult.AddToModelState(ModelState);
+            return BadRequest(ModelState);
+        }
+        var command = new AddQuestionCommand(QuizId.Create(id), QuestionText.Create(value.Text));
+        var (isSuccess, failure, questionId) = await new AddQuestionCommandHandler(_connection).Execute(command, cancellationToken);
+
+        if (!isSuccess)
+        {
+            if (failure is QuizNotFound)
+                return NotFound();
+            
+            ModelState.AddModelError("error", failure.Message);
+            return BadRequest(ModelState);
+        }
+        
         return Created($"/api/quizzes/{id}/questions/{questionId}", null);
     }
 
     // PUT api/quizzes/5/questions/6
-    [HttpPut("{id}/questions/{qid}")]
-    public IActionResult PutQuestion(int id, int qid, [FromBody]QuestionUpdateModel value)
+    [HttpPut("{id:long}/questions/{qid:long}")]
+    public async Task<IActionResult> PutQuestion(
+        [FromRoute] long id,
+        [FromRoute] long qid,
+        [FromBody] QuestionUpdateRequest value,
+        [FromServices] IValidator<QuestionUpdateRequest> validator,
+        CancellationToken cancellationToken
+    )
     {
-        const string sql = "UPDATE Question SET Text = @Text, CorrectAnswerId = @CorrectAnswerId WHERE Id = @QuestionId";
-        int rowsUpdated = _connection.Execute(sql, new {QuestionId = qid, Text = value.Text, CorrectAnswerId = value.CorrectAnswerId});
-        if (rowsUpdated == 0)
+        var validationResult = validator.Validate(value);
+        if (!validationResult.IsValid)
+        {
+            validationResult.AddToModelState(ModelState);
+            return BadRequest(ModelState);
+        }
+        
+        var command = new UpdateQuestionCommand(
+            QuizId.Create(id),
+            QuestionId.Create(qid),
+            QuestionText.Create(value.Text),
+            value.CorrectAnswerId is null ? null : AnswerId.Create(value.CorrectAnswerId.Value)
+        );
+        var (isSuccess, _, _) = await new UpdateQuestionCommandHandler(_connection).Execute(command, cancellationToken);
+        // TODO: consider returning 400 when command failed
+        
+        if (!isSuccess)
             return NotFound();
         return NoContent();
     }
 
     // DELETE api/quizzes/5/questions/6
     [HttpDelete]
-    [Route("{id}/questions/{qid}")]
-    public IActionResult DeleteQuestion(int id, int qid)
+    [Route("{id:long}/questions/{qid:long}")]
+    public async Task<IActionResult> DeleteQuestion(
+        [FromRoute] long id,
+        [FromRoute] long qid
+    )
     {
-        const string sql = "DELETE FROM Question WHERE Id = @QuestionId";
-        _connection.ExecuteScalar(sql, new {QuestionId = qid});
+        var command = new DeleteQuestionCommand(QuizId.Create(id), QuestionId.Create(qid));
+        var (isSuccess, _, _) = await new DeleteQuestionCommandHandler(_connection).Execute(command, CancellationToken.None);
+        if (!isSuccess)
+            return NotFound();
         return NoContent();
     }
 
     // POST api/quizzes/5/questions/6/answers
     [HttpPost]
-    [Route("{id}/questions/{qid}/answers")]
-    public IActionResult PostAnswer(int id, int qid, [FromBody]AnswerCreateModel value)
+    [Route("{id:long}/questions/{qid:long}/answers")]
+    public async Task<IActionResult> PostAnswer(
+        [FromRoute] long id,
+        [FromRoute] long qid,
+        [FromBody] AnswerCreateRequest value,
+        [FromServices] IValidator<AnswerCreateRequest> validator,
+        CancellationToken cancellationToken
+        )
     {
-        const string sql = "INSERT INTO Answer (Text, QuestionId) VALUES(@Text, @QuestionId); SELECT LAST_INSERT_ROWID();";
-        var answerId = _connection.ExecuteScalar(sql, new {Text = value.Text, QuestionId = qid});
+        var validationResult = validator.Validate(value);
+        if (!validationResult.IsValid)
+        {
+            validationResult.AddToModelState(ModelState);
+            return BadRequest(ModelState);
+        }
+        var command = new AddAnswerCommand(
+            QuizId.Create(id),
+            QuestionId.Create(qid),
+            AnswerText.Create(value.Text)
+        );
+        var (isSuccess, failure, answerId) = await new AddAnswerCommandHandler(_connection).Execute(command, cancellationToken);
+        if (!isSuccess)
+        {
+            switch (failure)
+            {
+                case QuizNotFound:
+                case QuestionNotFound:
+                    return NotFound();
+                default:
+                    ModelState.AddModelError("error", failure.Message);
+                    return BadRequest(ModelState);
+            }
+        }
         return Created($"/api/quizzes/{id}/questions/{qid}/answers/{answerId}", null);
     }
 
     // PUT api/quizzes/5/questions/6/answers/7
-    [HttpPut("{id}/questions/{qid}/answers/{aid}")]
-    public IActionResult PutAnswer(int id, int qid, int aid, [FromBody]AnswerUpdateModel value)
+    [HttpPut("{id:long}/questions/{qid:long}/answers/{aid:long}")]
+    public IActionResult PutAnswer(
+        [FromRoute] long id,
+        [FromRoute] long qid,
+        [FromRoute] long aid,
+        [FromBody] AnswerUpdateRequest value,
+        [FromServices] IValidator<AnswerUpdateRequest> validator
+    )
     {
+        var validationResult = validator.Validate(value);
+        if (!validationResult.IsValid)
+        {
+            validationResult.AddToModelState(ModelState);
+            return BadRequest(ModelState);
+        }
+        
         const string sql = "UPDATE Answer SET Text = @Text WHERE Id = @AnswerId";
         int rowsUpdated = _connection.Execute(sql, new {AnswerId = qid, Text = value.Text});
         if (rowsUpdated == 0)
@@ -75,8 +162,12 @@ public class QuizQuestionsController : ControllerBase
 
     // DELETE api/quizzes/5/questions/6/answers/7
     [HttpDelete]
-    [Route("{id}/questions/{qid}/answers/{aid}")]
-    public IActionResult DeleteAnswer(int id, int qid, int aid)
+    [Route("{id:long}/questions/{qid:long}/answers/{aid:long}")]
+    public IActionResult DeleteAnswer(
+        [FromRoute] long id,
+        [FromRoute] long qid,
+        [FromRoute] long aid
+    )
     {
         const string sql = "DELETE FROM Answer WHERE Id = @AnswerId";
         _connection.ExecuteScalar(sql, new {AnswerId = aid});

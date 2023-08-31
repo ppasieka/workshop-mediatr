@@ -114,6 +114,10 @@ internal static class Database
     {
         SqlMapper.AddTypeHandler(new QuizIdTypeHandler());
         SqlMapper.AddTypeHandler(new QuizTitleTypeHandler());
+        SqlMapper.AddTypeHandler(new QuestionIdTypeHandler());
+        SqlMapper.AddTypeHandler(new QuestionTextTypeHandler());
+        SqlMapper.AddTypeHandler(new AnswerIdTypeHandler());
+        SqlMapper.AddTypeHandler(new AnswerTextTypeHandler());
     }
 
     private static async Task<string> GetResourceText(Assembly assembly, string resourceName)
@@ -121,7 +125,7 @@ internal static class Database
         await using var stream = assembly.GetManifestResourceStream(resourceName);
         if (stream == null)
         {
-            throw new Exception($"Resource {resourceName} not found!");
+            throw new InvalidOperationException($"Resource {resourceName} not found!");
         }
         using var reader = new StreamReader(stream);
         return await reader.ReadToEndAsync();

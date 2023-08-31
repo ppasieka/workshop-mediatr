@@ -15,7 +15,10 @@ internal class AddQuizCommandHandler
         _connection = connection;
     }
 
-    public async Task<Result<IError, QuizId>> Execute(AddQuizCommand command, CancellationToken cancellationToken)
+    public async Task<Result<IError, QuizId>> Execute(
+        AddQuizCommand command,
+        CancellationToken cancellationToken
+    )
     {
         bool quizExist = await SqlQuizExists.Execute(command.Title, _connection, cancellationToken: cancellationToken);
         if (quizExist)
@@ -23,7 +26,10 @@ internal class AddQuizCommandHandler
         return await AddQuiz(command, cancellationToken);
     }
 
-    private async Task<QuizId> AddQuiz(AddQuizCommand command, CancellationToken cancellationToken)
+    private async Task<QuizId> AddQuiz(
+        AddQuizCommand command,
+        CancellationToken cancellationToken
+    )
     {
         await using var transaction = await _connection.BeginTransactionAsync(cancellationToken);
         var quizId = await _connection.ExecuteScalarAsync<QuizId>(

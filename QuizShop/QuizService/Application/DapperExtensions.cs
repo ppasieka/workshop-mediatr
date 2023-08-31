@@ -35,7 +35,11 @@ public static class DapperExtensions
         {
             yield return rowParser(reader);
         }
-        while (await reader.NextResultAsync(cancellationToken)) { }
+
+        while (await reader.NextResultAsync(cancellationToken))
+        {
+            // do nothing. Kept to exhaust the reader
+        }
     } 
     
 }
