@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using Dapper;
 
 namespace QuizService.Application;
@@ -9,19 +10,23 @@ internal class AnswerId : IEquatable<AnswerId>
     
     private AnswerId(long value) => Value = value;
 
-    public static AnswerId? TryCreate(long value)
+    public static bool TryCreate(long value, [NotNullWhen(true)] out AnswerId? answerId)
     {
         if (value < 1)
-            return null;
-        return new AnswerId(value);
+        {
+            answerId = null;
+            return false;
+        }
+
+        answerId = new AnswerId(value);
+        return true;
     }
     
     public static AnswerId Create(long value)
     {
-        var answerId = TryCreate(value);
-        if (answerId is null)
+        if (!TryCreate(value, out var answerId))
             throw new ArgumentException("Answer id must be greater than 0", nameof(value));
-        return new AnswerId(value);
+        return answerId;
     }
 
     public bool Equals(AnswerId? other)

@@ -53,12 +53,32 @@ public class QuizQuestionsController : ControllerBase
     }
 
     // PUT api/quizzes/5/questions/6
-    [HttpPut("{id}/questions/{qid}")]
-    public IActionResult PutQuestion(int id, int qid, [FromBody]QuestionUpdateModel value)
+    [HttpPut("{id:long}/questions/{qid:long}")]
+    public async Task<IActionResult> PutQuestion(
+        [FromRoute] long id,
+        [FromRoute] long qid,
+        [FromBody] QuestionUpdateRequest value,
+        [FromServices] IValidator<QuestionUpdateRequest> validator,
+        CancellationToken cancellationToken
+    )
     {
-        const string sql = "UPDATE Question SET Text = @Text, CorrectAnswerId = @CorrectAnswerId WHERE Id = @QuestionId";
-        int rowsUpdated = _connection.Execute(sql, new {QuestionId = qid, Text = value.Text, CorrectAnswerId = value.CorrectAnswerId});
-        if (rowsUpdated == 0)
+        var validationResult = validator.Validate(value);
+        if (!validationResult.IsValid)
+        {
+            validationResult.AddToModelState(ModelState);
+            return BadRequest(ModelState);
+        }
+        
+        var command = new UpdateQuestionCommand(
+            QuizId.Create(id),
+            QuestionId.Create(qid),
+            QuestionText.Create(value.Text),
+            value.CorrectAnswerId is null ? null : AnswerId.Create(value.CorrectAnswerId.Value)
+        );
+        var (isSuccess, _, _) = await new UpdateQuestionCommandHandler(_connection).Execute(command, cancellationToken);
+        // TODO: consider returning 400 when command failed
+        
+        if (!isSuccess)
             return NotFound();
         return NoContent();
     }

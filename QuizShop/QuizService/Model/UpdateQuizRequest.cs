@@ -8,9 +8,9 @@ public class UpdateQuizRequest
     public string? Title { get; init; }
 }
 
-public class QuizUpdateModelValidator : AbstractValidator<UpdateQuizRequest>
+public class QuizUpdateRequestValidator : AbstractValidator<UpdateQuizRequest>
 {
-    public QuizUpdateModelValidator()
+    public QuizUpdateRequestValidator()
     {
         RuleFor(x => x.Title)
             .NotEmpty()
