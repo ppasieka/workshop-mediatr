@@ -28,7 +28,7 @@ public class QuizUpdateTest : IClassFixture<QuizAppFactory>
         var content = new StringContent(JsonConvert.SerializeObject(new { Title = newTitle }), Encoding.UTF8, "application/json");
 
         // act
-        var response = await client.PutAsync(new Uri($"{QuizAppFactory.QuizApiEndPoint}{quizId}"), content);
+        var response = await client.PutAsync(new Uri($"{QuizAppFactory.QuizApiEndPoint}{quizId}", UriKind.Relative), content);
 
         // assert
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -44,7 +44,7 @@ public class QuizUpdateTest : IClassFixture<QuizAppFactory>
         var content = new StringContent(JsonConvert.SerializeObject(new { Title = newTitle }), Encoding.UTF8, "application/json");
 
         // act
-        var response = await client.PutAsync(new Uri($"{QuizAppFactory.QuizApiEndPoint}{quizId}"), content);
+        var response = await client.PutAsync(new Uri($"{QuizAppFactory.QuizApiEndPoint}{quizId}", UriKind.Relative), content);
 
         // assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -60,7 +60,7 @@ public class QuizUpdateTest : IClassFixture<QuizAppFactory>
         var content = new StringContent(JsonConvert.SerializeObject(new { Title = newTitle }), Encoding.UTF8, "application/json");
 
         // act
-        var response = await client.PutAsync(new Uri($"{QuizAppFactory.QuizApiEndPoint}{quizId}"), content);
+        var response = await client.PutAsync(new Uri($"{QuizAppFactory.QuizApiEndPoint}{quizId}", UriKind.Relative), content);
 
         // assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -76,7 +76,7 @@ public class QuizUpdateTest : IClassFixture<QuizAppFactory>
         var content = new StringContent(JsonConvert.SerializeObject(new { Title = newTitle }), Encoding.UTF8, "application/json");
 
         // act
-        var response = await client.PutAsync(new Uri($"{QuizAppFactory.QuizApiEndPoint}{quizId}"), content);
+        var response = await client.PutAsync(new Uri($"{QuizAppFactory.QuizApiEndPoint}{quizId}", UriKind.Relative), content);
 
         // assert
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -92,7 +92,7 @@ public class QuizUpdateTest : IClassFixture<QuizAppFactory>
         var content = new StringContent(JsonConvert.SerializeObject(new { Title = newTitle }), Encoding.UTF8, "application/json");
 
         // act
-        var response = await client.PutAsync(new Uri($"{QuizAppFactory.QuizApiEndPoint}{quizId}"), content);
+        var response = await client.PutAsync(new Uri($"{QuizAppFactory.QuizApiEndPoint}{quizId}", UriKind.Relative), content);
 
         // assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -108,7 +108,7 @@ public class QuizUpdateTest : IClassFixture<QuizAppFactory>
         var content = new StringContent(JsonConvert.SerializeObject(new { Title = newTitle }), Encoding.UTF8, "application/json");
 
         // act
-        var response = await client.PutAsync(new Uri($"{QuizAppFactory.QuizApiEndPoint}{quizId}"), content);
+        var response = await client.PutAsync(new Uri($"{QuizAppFactory.QuizApiEndPoint}{quizId}", UriKind.Relative), content);
 
         // assert
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -124,8 +124,8 @@ public class QuizUpdateTest : IClassFixture<QuizAppFactory>
         var content = new StringContent(JsonConvert.SerializeObject(new { Title = newTitle }), Encoding.UTF8, "application/json");
 
         // act
-        await client.PutAsync(new Uri($"{QuizAppFactory.QuizApiEndPoint}{quizId}"), content);
-        var response = await client.GetAsync(new Uri($"{QuizAppFactory.QuizApiEndPoint}{quizId}"));
+        await client.PutAsync(new Uri($"{QuizAppFactory.QuizApiEndPoint}{quizId}", UriKind.Relative), content);
+        var response = await client.GetAsync(new Uri($"{QuizAppFactory.QuizApiEndPoint}{quizId}", UriKind.Relative));
 
         // assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);

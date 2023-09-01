@@ -23,7 +23,7 @@ public class QuizzesTest : IClassFixture<QuizAppFactory>
     public async Task Get_all_quizzes()
     {
         var client = _factory.CreateClient();
-        var response = await client.GetAsync(new Uri($"{QuizAppFactory.QuizApiEndPoint}"));
+        var response = await client.GetAsync(new Uri($"{QuizAppFactory.QuizApiEndPoint}", UriKind.Relative));
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
@@ -34,7 +34,7 @@ public class QuizzesTest : IClassFixture<QuizAppFactory>
         var client = _factory.CreateClient();
         var content = new StringContent(JsonConvert.SerializeObject(quiz));
         content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-        var response = await client.PostAsync(new Uri($"{QuizAppFactory.QuizApiEndPoint}"),
+        var response = await client.PostAsync(new Uri($"{QuizAppFactory.QuizApiEndPoint}", UriKind.Relative),
             content);
         response.StatusCode.Should().Be(HttpStatusCode.Created);
     }
@@ -46,7 +46,7 @@ public class QuizzesTest : IClassFixture<QuizAppFactory>
         var client = _factory.CreateClient();
         var content = new StringContent(JsonConvert.SerializeObject(quiz));
         content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-        var response = await client.PostAsync(new Uri($"{QuizAppFactory.QuizApiEndPoint}"),
+        var response = await client.PostAsync(new Uri($"{QuizAppFactory.QuizApiEndPoint}", UriKind.Relative),
             content);
         response.Headers.Location.Should().NotBeNull();
     }
@@ -56,7 +56,7 @@ public class QuizzesTest : IClassFixture<QuizAppFactory>
     {
         var client = _factory.CreateClient();
         const long quizId = 1;
-        var response = await client.GetAsync(new Uri($"{QuizAppFactory.QuizApiEndPoint}{quizId}"));
+        var response = await client.GetAsync(new Uri($"{QuizAppFactory.QuizApiEndPoint}{quizId}", UriKind.Relative));
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
     
@@ -65,7 +65,7 @@ public class QuizzesTest : IClassFixture<QuizAppFactory>
     {
         var client = _factory.CreateClient();
         const long quizId = 1;
-        var response = await client.GetAsync(new Uri($"{QuizAppFactory.QuizApiEndPoint}{quizId}"));
+        var response = await client.GetAsync(new Uri($"{QuizAppFactory.QuizApiEndPoint}{quizId}", UriKind.Relative));
         var quiz = JsonConvert.DeserializeObject<QuizItemResponse>(await response.Content.ReadAsStringAsync());
         quiz.Should().NotBeNull();
         quiz!.Id.Should().Be(quizId);
@@ -77,7 +77,7 @@ public class QuizzesTest : IClassFixture<QuizAppFactory>
     {
         var client = _factory.CreateClient();
         const long quizId = 999;
-        var response = await client.GetAsync(new Uri($"{QuizAppFactory.QuizApiEndPoint}{quizId}"));
+        var response = await client.GetAsync(new Uri($"{QuizAppFactory.QuizApiEndPoint}{quizId}", UriKind.Relative));
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
@@ -90,7 +90,7 @@ public class QuizzesTest : IClassFixture<QuizAppFactory>
         var question = new AddQuestionRequest("The answer to everything is what?");
         var content = new StringContent(JsonConvert.SerializeObject(question));
         content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-        var response = await client.PostAsync(new Uri($"{quizApiEndPoint}"),content);
+        var response = await client.PostAsync(new Uri($"{quizApiEndPoint}", UriKind.Relative),content);
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 }

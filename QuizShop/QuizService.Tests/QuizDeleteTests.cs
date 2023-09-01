@@ -22,7 +22,7 @@ public class QuizDeleteTests : IClassFixture<QuizAppFactory>
         const long quizId = 1;
         
         // act
-        var response = await client.DeleteAsync(new Uri($"{QuizAppFactory.QuizApiEndPoint}{quizId}"));
+        var response = await client.DeleteAsync(new Uri($"{QuizAppFactory.QuizApiEndPoint}{quizId}", UriKind.Relative));
         
         // assert
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -36,7 +36,7 @@ public class QuizDeleteTests : IClassFixture<QuizAppFactory>
         const long quizId = 999;
         
         // act
-        var response = await client.DeleteAsync(new Uri($"{QuizAppFactory.QuizApiEndPoint}{quizId}"));
+        var response = await client.DeleteAsync(new Uri($"{QuizAppFactory.QuizApiEndPoint}{quizId}", UriKind.Relative));
         
         // assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
