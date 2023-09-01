@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -23,6 +24,14 @@ public class Startup
         services.AddValidatorsFromAssemblyContaining<QuizUpdateRequestValidator>();
         services.AddMvc();
         services.AddLogging();
+        services.AddHttpLogging(logging =>
+        {
+            logging.LoggingFields = HttpLoggingFields.RequestMethod
+                                    | HttpLoggingFields.RequestPath
+                                    | HttpLoggingFields.RequestQuery
+                                    | HttpLoggingFields.RequestBody
+                                    | HttpLoggingFields.ResponseStatusCode;
+        });
         services.AddControllers();
     }
 
@@ -34,6 +43,7 @@ public class Startup
             app.UseDeveloperExceptionPage();
         }
         app.UseRouting();
+        app.UseHttpLogging();
         app.UseEndpoints(endpoints =>
         {
             endpoints.MapControllers();
