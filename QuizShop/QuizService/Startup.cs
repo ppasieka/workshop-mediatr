@@ -22,6 +22,7 @@ public class Startup
     {
         services.AddValidatorsFromAssemblyContaining<QuizUpdateRequestValidator>();
         services.AddMvc();
+        services.AddLogging();
         services.AddControllers();
     }
 

@@ -4,10 +4,11 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace QuizService;
 
-public static class Program
+public class Program
 {
     public static async Task Main(string[] args)
     {
@@ -16,7 +17,6 @@ public static class Program
         await Database.RunMigration(connection);
         await Database.SeedDatabase(connection);
         IHost host = BuildWebHost(args, connection);
-
         await host.RunAsync();
     }
 
@@ -30,6 +30,11 @@ public static class Program
                     services.AddSingleton<IDbConnection>(connection);
                     services.AddSingleton(connection);
                 });
+            })
+            .ConfigureLogging(logging =>
+            {
+                logging.ClearProviders();
+                logging.AddConsole();
             })
             .Build();
 }

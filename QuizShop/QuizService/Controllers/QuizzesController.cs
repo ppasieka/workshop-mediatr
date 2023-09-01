@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using QuizService.Application;
 using QuizService.Model;
 
@@ -15,10 +16,11 @@ namespace QuizService.Controllers;
 [Route("api/quizzes")]
 public class QuizzesController : ControllerBase
 {
-
+    private readonly ILogger<QuizzesController> _logger;
     private readonly DbConnection _connection;
-    public QuizzesController(DbConnection connection)
+    public QuizzesController(ILogger<QuizzesController> logger, DbConnection connection)
     {
+        _logger = logger;
         _connection = connection;
     }
     
@@ -26,6 +28,7 @@ public class QuizzesController : ControllerBase
     [HttpGet]
     public IAsyncEnumerable<QuizItemResponse> Get(CancellationToken cancellationToken)
     {
+        _logger.LogInformation("Get all quizzes");
         var query = new GetQuizzesQueryHandler(_connection);
         return query.Execute(cancellationToken).Select(quiz =>
             new QuizItemResponse
