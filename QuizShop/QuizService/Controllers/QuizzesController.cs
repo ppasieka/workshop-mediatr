@@ -26,7 +26,7 @@ public class QuizzesController : ControllerBase
     [HttpGet]
     public IAsyncEnumerable<QuizItemResponse> Get(CancellationToken cancellationToken)
     {
-        var query = new GetQuizzesQuery(_connection);
+        var query = new GetQuizzesQueryHandler(_connection);
         return query.Execute(cancellationToken).Select(quiz =>
             new QuizItemResponse
             {

@@ -5,11 +5,11 @@ using System.Threading;
 
 namespace QuizService.Application;
 
-internal class GetQuizzesQuery
+internal class GetQuizzesQueryHandler
 {
     private readonly DbConnection _connection;
 
-    public GetQuizzesQuery(DbConnection connection)
+    public GetQuizzesQueryHandler(DbConnection connection)
     {
         _connection = connection;
     }

@@ -5,11 +5,11 @@ using Dapper;
 
 namespace QuizService.Application;
 
-internal class GetQuizByIdQuery
+internal class GetQuizByIdQueryHandler
 {
     private readonly DbConnection _connection;
 
-    public GetQuizByIdQuery(DbConnection connection)
+    public GetQuizByIdQueryHandler(DbConnection connection)
     {
         _connection = connection;
     }

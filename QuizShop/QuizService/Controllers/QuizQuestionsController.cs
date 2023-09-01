@@ -153,8 +153,8 @@ public class QuizQuestionsController : ControllerBase
             return BadRequest(ModelState);
         }
         
-        const string sql = "UPDATE Answer SET Text = @Text WHERE Id = @AnswerId";
-        int rowsUpdated = _connection.Execute(sql, new {AnswerId = qid, Text = value.Text});
+        const string sql = "UPDATE Answer SET Text = @AnswerText WHERE Id = @AnswerId";
+        int rowsUpdated = _connection.Execute(sql, new {AnswerId = qid, AnswerText = value.Text});
         if (rowsUpdated == 0)
             return NotFound();
         return NoContent();

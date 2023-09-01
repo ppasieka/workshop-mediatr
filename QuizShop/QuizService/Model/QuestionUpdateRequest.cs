@@ -19,7 +19,7 @@ public class QuestionUpdateRequestValidator : AbstractValidator<QuestionUpdateRe
         When(x => x.CorrectAnswerId is not null, () =>
         {
             RuleFor(x => x.CorrectAnswerId)
-                .Must(id => AnswerId.TryCreate(id.Value, out _));
+                .Must(id => AnswerId.TryCreate(id!.Value, out _));
         });
     }
 }

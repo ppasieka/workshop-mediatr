@@ -25,7 +25,10 @@ public class QuizController : ControllerBase
 
     // GET api/quizzes/5
     [HttpGet("{id:long}")]
-    public async Task<object> Get(long id, CancellationToken cancellationToken)
+    public async Task<object> Get(
+        [FromRoute] long id,
+        CancellationToken cancellationToken
+    )
     {
         if (!QuizId.TryCreate(id, out var quizId))
         {
@@ -33,7 +36,7 @@ public class QuizController : ControllerBase
             return BadRequest();
         }
 
-        var quiz = await new GetQuizByIdQuery(_connection).Execute(quizId, cancellationToken);
+        var quiz = await new GetQuizByIdQueryHandler(_connection).Execute(quizId, cancellationToken);
         if (quiz == null)
             return NotFound();
         
@@ -92,8 +95,11 @@ public class QuizController : ControllerBase
     }
 
     // DELETE api/quizzes/5
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
+    [HttpDelete("{id:long}")]
+    public async Task<IActionResult> Delete(
+        [FromRoute] long id, 
+        CancellationToken cancellationToken
+    )
     {
         var result = await new DeleteQuizCommandHandler(_connection).Execute(QuizId.Create(id), cancellationToken);
         if (result.IsSuccess)
