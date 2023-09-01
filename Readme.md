@@ -21,6 +21,8 @@ Cons:
 
 ## Links 
 
+MediatR [GitHub](https://github.com/jbogard/MediatR)
+
 Article to look at (as a reference point on some topics):
 [CQRS and MediatR in ASP.NET Core - Code Maze (code-maze.com)](https://code-maze.com/cqrs-mediatr-in-aspnet-core/)
 
